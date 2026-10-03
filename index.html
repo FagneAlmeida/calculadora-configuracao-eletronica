@@ -1,0 +1,679 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Calculadora Quântica de Configuração Eletrônica</title>
+  <style>
+    :root {
+      --bg: #0f172a;
+      --card: #1e293b;
+      --accent: #38bdf8;
+      --accent2: #a78bfa;
+      --text: #e2e8f0;
+      --muted: #94a3b8;
+      --success: #34d399;
+      --warning: #fbbf24;
+      --box: #334155;
+      --arrow-up: #38bdf8;
+      --arrow-down: #f472b6;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%);
+      color: var(--text);
+      min-height: 100vh;
+      padding: 20px;
+      line-height: 1.5;
+    }
+    .container {
+      max-width: 960px;
+      margin: 0 auto;
+    }
+    header {
+      text-align: center;
+      margin-bottom: 28px;
+    }
+    header h1 {
+      font-size: 1.85rem;
+      background: linear-gradient(90deg, var(--accent), var(--accent2));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: 6px;
+    }
+    header p {
+      color: var(--muted);
+      font-size: 0.95rem;
+    }
+    .input-card {
+      background: var(--card);
+      border-radius: 16px;
+      padding: 24px;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.4);
+      border: 1px solid #334155;
+      margin-bottom: 24px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 16px;
+      align-items: flex-end;
+      justify-content: center;
+    }
+    .field {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .field label {
+      font-size: 0.85rem;
+      color: var(--muted);
+      font-weight: 500;
+    }
+    input[type="number"], select {
+      background: #0f172a;
+      border: 1px solid #475569;
+      color: var(--text);
+      padding: 12px 16px;
+      border-radius: 10px;
+      font-size: 1.1rem;
+      width: 140px;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    input[type="number"]:focus, select:focus {
+      border-color: var(--accent);
+    }
+    button {
+      background: linear-gradient(135deg, #0ea5e9, #6366f1);
+      color: white;
+      border: none;
+      padding: 12px 28px;
+      border-radius: 10px;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: transform 0.15s, box-shadow 0.15s;
+    }
+    button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 20px rgba(14,165,233,0.4);
+    }
+    button:active { transform: translateY(0); }
+    .result-card {
+      background: var(--card);
+      border-radius: 16px;
+      padding: 24px;
+      border: 1px solid #334155;
+      margin-bottom: 20px;
+      display: none;
+    }
+    .result-card.visible { display: block; animation: fadeIn 0.35s ease; }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(8px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .element-header {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+    }
+    .atomic-badge {
+      background: linear-gradient(135deg, #0ea5e9, #6366f1);
+      width: 64px;
+      height: 64px;
+      border-radius: 14px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      flex-shrink: 0;
+    }
+    .atomic-badge .z { font-size: 1.4rem; line-height: 1; }
+    .atomic-badge .sym { font-size: 0.75rem; opacity: 0.9; }
+    .element-info h2 {
+      font-size: 1.5rem;
+      margin-bottom: 2px;
+    }
+    .element-info .name { color: var(--muted); font-size: 0.95rem; }
+    .config-block {
+      background: #0f172a;
+      border-radius: 12px;
+      padding: 16px 20px;
+      margin-bottom: 16px;
+      border-left: 4px solid var(--accent);
+    }
+    .config-block h3 {
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--muted);
+      margin-bottom: 8px;
+    }
+    .config-text {
+      font-family: 'Consolas', 'Monaco', monospace;
+      font-size: 1.15rem;
+      word-break: break-word;
+    }
+    .config-text .sub { color: var(--accent); }
+    .anomaly-note {
+      background: rgba(251, 191, 36, 0.12);
+      border: 1px solid rgba(251, 191, 36, 0.35);
+      border-radius: 10px;
+      padding: 12px 16px;
+      margin-bottom: 16px;
+      font-size: 0.9rem;
+      color: var(--warning);
+    }
+    .quantum-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+    .q-card {
+      background: #0f172a;
+      border-radius: 10px;
+      padding: 14px;
+      text-align: center;
+      border: 1px solid #334155;
+    }
+    .q-card .label {
+      font-size: 0.75rem;
+      color: var(--muted);
+      margin-bottom: 4px;
+    }
+    .q-card .value {
+      font-size: 1.35rem;
+      font-weight: 700;
+      color: var(--accent2);
+    }
+    .orbitals-section h3 {
+      font-size: 1rem;
+      margin-bottom: 14px;
+      color: var(--muted);
+    }
+    .subshell {
+      margin-bottom: 18px;
+    }
+    .subshell-label {
+      font-family: monospace;
+      font-size: 0.95rem;
+      margin-bottom: 8px;
+      color: var(--accent);
+    }
+    .boxes {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+    .orbital-box {
+      width: 42px;
+      height: 52px;
+      background: var(--box);
+      border: 2px solid #475569;
+      border-radius: 6px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      gap: 2px;
+    }
+    .orbital-box.filled {
+      border-color: var(--accent);
+      background: #1e3a5f;
+    }
+    .arrow {
+      width: 0;
+      height: 0;
+      border-left: 6px solid transparent;
+      border-right: 6px solid transparent;
+    }
+    .arrow.up {
+      border-bottom: 12px solid var(--arrow-up);
+    }
+    .arrow.down {
+      border-top: 12px solid var(--arrow-down);
+    }
+    .legend {
+      display: flex;
+      gap: 20px;
+      margin-top: 16px;
+      font-size: 0.85rem;
+      color: var(--muted);
+      flex-wrap: wrap;
+    }
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .legend .arrow { transform: scale(0.8); }
+    .valence-info {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-top: 8px;
+    }
+    .badge {
+      background: #0f172a;
+      padding: 6px 12px;
+      border-radius: 20px;
+      font-size: 0.85rem;
+      border: 1px solid #334155;
+    }
+    .badge strong { color: var(--success); }
+    footer {
+      text-align: center;
+      margin-top: 32px;
+      color: var(--muted);
+      font-size: 0.8rem;
+    }
+    @media (max-width: 600px) {
+      header h1 { font-size: 1.4rem; }
+      .input-card { flex-direction: column; align-items: stretch; }
+      input[type="number"], select { width: 100%; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>Calculadora Quântica de Configuração Eletrônica</h1>
+      <p>Visualização atômica com Aufbau • Pauli • Hund • Anomalias reais</p>
+    </header>
+
+    <div class="input-card">
+      <div class="field">
+        <label for="zInput">Número Atômico (Z)</label>
+        <input type="number" id="zInput" min="1" max="118" value="14" placeholder="1–118">
+      </div>
+      <div class="field">
+        <label for="elementSelect">Ou escolha o elemento</label>
+        <select id="elementSelect">
+          <option value="">— Selecione —</option>
+        </select>
+      </div>
+      <button onclick="calcular()">Calcular</button>
+    </div>
+
+    <div id="resultado" class="result-card">
+      <div class="element-header">
+        <div class="atomic-badge">
+          <span class="z" id="resZ">14</span>
+          <span class="sym" id="resSym">Si</span>
+        </div>
+        <div class="element-info">
+          <h2 id="resName">Silício</h2>
+          <div class="name">Elemento Z = <span id="resZ2">14</span></div>
+        </div>
+      </div>
+
+      <div id="anomalyNote" class="anomaly-note" style="display:none;"></div>
+
+      <div class="config-block">
+        <h3>Configuração Completa</h3>
+        <div class="config-text" id="configFull"></div>
+      </div>
+
+      <div class="config-block">
+        <h3>Notação de Gás Nobre</h3>
+        <div class="config-text" id="configNoble"></div>
+        <div class="valence-info" id="valenceInfo"></div>
+      </div>
+
+      <div class="config-block">
+        <h3>Números Quânticos do Elétron Diferenciador</h3>
+        <div class="quantum-grid" id="quantumGrid"></div>
+      </div>
+
+      <div class="orbitals-section">
+        <h3>Diagrama de Orbitais (Regra de Hund)</h3>
+        <div id="orbitalsVisual"></div>
+        <div class="legend">
+          <div class="legend-item"><div class="arrow up"></div> Spin +½ (ms = +½)</div>
+          <div class="legend-item"><div class="arrow down"></div> Spin −½ (ms = −½)</div>
+          <div class="legend-item">Convenção: 1º elétron no orbital recebe ms = −½</div>
+        </div>
+      </div>
+    </div>
+
+    <footer>
+      Projeto acadêmico • Princípios de Aufbau, Exclusão de Pauli e Regra de Hund<br>
+      Anomalias experimentais (Cr, Cu, Mo, Ag, Pd…) incluídas
+    </footer>
+  </div>
+
+  <script>
+    // ========== DADOS ==========
+    const elementos = [
+      {z:1,s:"H",n:"Hidrogênio"},{z:2,s:"He",n:"Hélio"},{z:3,s:"Li",n:"Lítio"},{z:4,s:"Be",n:"Berílio"},
+      {z:5,s:"B",n:"Boro"},{z:6,s:"C",n:"Carbono"},{z:7,s:"N",n:"Nitrogênio"},{z:8,s:"O",n:"Oxigênio"},
+      {z:9,s:"F",n:"Flúor"},{z:10,s:"Ne",n:"Neônio"},{z:11,s:"Na",n:"Sódio"},{z:12,s:"Mg",n:"Magnésio"},
+      {z:13,s:"Al",n:"Alumínio"},{z:14,s:"Si",n:"Silício"},{z:15,s:"P",n:"Fósforo"},{z:16,s:"S",n:"Enxofre"},
+      {z:17,s:"Cl",n:"Cloro"},{z:18,s:"Ar",n:"Argônio"},{z:19,s:"K",n:"Potássio"},{z:20,s:"Ca",n:"Cálcio"},
+      {z:21,s:"Sc",n:"Escândio"},{z:22,s:"Ti",n:"Titânio"},{z:23,s:"V",n:"Vanádio"},{z:24,s:"Cr",n:"Cromo"},
+      {z:25,s:"Mn",n:"Manganês"},{z:26,s:"Fe",n:"Ferro"},{z:27,s:"Co",n:"Cobalto"},{z:28,s:"Ni",n:"Níquel"},
+      {z:29,s:"Cu",n:"Cobre"},{z:30,s:"Zn",n:"Zinco"},{z:31,s:"Ga",n:"Gálio"},{z:32,s:"Ge",n:"Germânio"},
+      {z:33,s:"As",n:"Arsênio"},{z:34,s:"Se",n:"Selênio"},{z:35,s:"Br",n:"Bromo"},{z:36,s:"Kr",n:"Criptônio"},
+      {z:37,s:"Rb",n:"Rubídio"},{z:38,s:"Sr",n:"Estrôncio"},{z:39,s:"Y",n:"Ítrio"},{z:40,s:"Zr",n:"Zircônio"},
+      {z:41,s:"Nb",n:"Nióbio"},{z:42,s:"Mo",n:"Molibdênio"},{z:43,s:"Tc",n:"Tecnécio"},{z:44,s:"Ru",n:"Rutênio"},
+      {z:45,s:"Rh",n:"Ródio"},{z:46,s:"Pd",n:"Paládio"},{z:47,s:"Ag",n:"Prata"},{z:48,s:"Cd",n:"Cádmio"},
+      {z:49,s:"In",n:"Índio"},{z:50,s:"Sn",n:"Estanho"},{z:51,s:"Sb",n:"Antimônio"},{z:52,s:"Te",n:"Telúrio"},
+      {z:53,s:"I",n:"Iodo"},{z:54,s:"Xe",n:"Xenônio"},{z:55,s:"Cs",n:"Césio"},{z:56,s:"Ba",n:"Bário"},
+      {z:57,s:"La",n:"Lantânio"},{z:58,s:"Ce",n:"Cério"},{z:59,s:"Pr",n:"Praseodímio"},{z:60,s:"Nd",n:"Neodímio"},
+      {z:61,s:"Pm",n:"Promécio"},{z:62,s:"Sm",n:"Samário"},{z:63,s:"Eu",n:"Európio"},{z:64,s:"Gd",n:"Gadolínio"},
+      {z:65,s:"Tb",n:"Térbio"},{z:66,s:"Dy",n:"Disprósio"},{z:67,s:"Ho",n:"Hólmio"},{z:68,s:"Er",n:"Érbio"},
+      {z:69,s:"Tm",n:"Túlio"},{z:70,s:"Yb",n:"Itérbio"},{z:71,s:"Lu",n:"Lutécio"},{z:72,s:"Hf",n:"Háfnio"},
+      {z:73,s:"Ta",n:"Tântalo"},{z:74,s:"W",n:"Tungstênio"},{z:75,s:"Re",n:"Rênio"},{z:76,s:"Os",n:"Ósmio"},
+      {z:77,s:"Ir",n:"Irídio"},{z:78,s:"Pt",n:"Platina"},{z:79,s:"Au",n:"Ouro"},{z:80,s:"Hg",n:"Mercúrio"},
+      {z:81,s:"Tl",n:"Tálio"},{z:82,s:"Pb",n:"Chumbo"},{z:83,s:"Bi",n:"Bismuto"},{z:84,s:"Po",n:"Polônio"},
+      {z:85,s:"At",n:"Astato"},{z:86,s:"Rn",n:"Radônio"},{z:87,s:"Fr",n:"Frâncio"},{z:88,s:"Ra",n:"Rádio"},
+      {z:89,s:"Ac",n:"Actínio"},{z:90,s:"Th",n:"Tório"},{z:91,s:"Pa",n:"Protactínio"},{z:92,s:"U",n:"Urânio"},
+      {z:93,s:"Np",n:"Neptúnio"},{z:94,s:"Pu",n:"Plutônio"},{z:95,s:"Am",n:"Amerício"},{z:96,s:"Cm",n:"Cúrio"},
+      {z:97,s:"Bk",n:"Berquélio"},{z:98,s:"Cf",n:"Califórnio"},{z:99,s:"Es",n:"Einstênio"},{z:100,s:"Fm",n:"Férmio"},
+      {z:101,s:"Md",n:"Mendelévio"},{z:102,s:"No",n:"Nobélio"},{z:103,s:"Lr",n:"Laurêncio"},{z:104,s:"Rf",n:"Rutherfórdio"},
+      {z:105,s:"Db",n:"Dúbnio"},{z:106,s:"Sg",n:"Seabórgio"},{z:107,s:"Bh",n:"Bóhrio"},{z:108,s:"Hs",n:"Hássio"},
+      {z:109,s:"Mt",n:"Meitnério"},{z:110,s:"Ds",n:"Darmstádtio"},{z:111,s:"Rg",n:"Roentgênio"},{z:112,s:"Cn",n:"Copernício"},
+      {z:113,s:"Nh",n:"Nihônio"},{z:114,s:"Fl",n:"Fleróvio"},{z:115,s:"Mc",n:"Moscóvio"},{z:116,s:"Lv",n:"Livermório"},
+      {z:117,s:"Ts",n:"Tenesso"},{z:118,s:"Og",n:"Oganessônio"}
+    ];
+
+    // Ordem de Pauling / Aufbau
+    const ordemPauling = [
+      {n:1, sub:'s', l:0, cap:2},
+      {n:2, sub:'s', l:0, cap:2},
+      {n:2, sub:'p', l:1, cap:6},
+      {n:3, sub:'s', l:0, cap:2},
+      {n:3, sub:'p', l:1, cap:6},
+      {n:4, sub:'s', l:0, cap:2},
+      {n:3, sub:'d', l:2, cap:10},
+      {n:4, sub:'p', l:1, cap:6},
+      {n:5, sub:'s', l:0, cap:2},
+      {n:4, sub:'d', l:2, cap:10},
+      {n:5, sub:'p', l:1, cap:6},
+      {n:6, sub:'s', l:0, cap:2},
+      {n:4, sub:'f', l:3, cap:14},
+      {n:5, sub:'d', l:2, cap:10},
+      {n:6, sub:'p', l:1, cap:6},
+      {n:7, sub:'s', l:0, cap:2},
+      {n:5, sub:'f', l:3, cap:14},
+      {n:6, sub:'d', l:2, cap:10},
+      {n:7, sub:'p', l:1, cap:6}
+    ];
+
+    // Anomalias conhecidas
+    const anomalias = {
+      24: { "4s":1, "3d":5 },
+      29: { "4s":1, "3d":10 },
+      41: { "5s":1, "4d":4 },
+      42: { "5s":1, "4d":5 },
+      44: { "5s":1, "4d":7 },
+      45: { "5s":1, "4d":8 },
+      46: { "5s":0, "4d":10 },
+      47: { "5s":1, "4d":10 },
+      57: { "6s":2, "5d":1, "4f":0 },
+      58: { "6s":2, "4f":1, "5d":1 },
+      64: { "6s":2, "4f":7, "5d":1 },
+      78: { "6s":1, "5d":9, "4f":14 },
+      79: { "6s":1, "5d":10, "4f":14 },
+      89: { "7s":2, "6d":1, "5f":0 },
+      90: { "7s":2, "6d":2, "5f":0 },
+      91: { "7s":2, "5f":2, "6d":1 },
+      92: { "7s":2, "5f":3, "6d":1 },
+      93: { "7s":2, "5f":4, "6d":1 },
+      96: { "7s":2, "5f":7, "6d":1 },
+      103:{ "7s":2, "5f":14, "7p":1 }
+    };
+
+    const gasesNobres = [
+      {z:2,  label:"[He]"},
+      {z:10, label:"[Ne]"},
+      {z:18, label:"[Ar]"},
+      {z:36, label:"[Kr]"},
+      {z:54, label:"[Xe]"},
+      {z:86, label:"[Rn]"}
+    ];
+
+    // ========== INICIALIZAÇÃO ==========
+    const select = document.getElementById('elementSelect');
+    elementos.forEach(el => {
+      const opt = document.createElement('option');
+      opt.value = el.z;
+      opt.textContent = `${el.z} – ${el.s} (${el.n})`;
+      select.appendChild(opt);
+    });
+
+    document.getElementById('zInput').addEventListener('change', e => {
+      select.value = e.target.value;
+    });
+    select.addEventListener('change', e => {
+      if (e.target.value) document.getElementById('zInput').value = e.target.value;
+    });
+
+    document.getElementById('zInput').addEventListener('keydown', e => {
+      if (e.key === 'Enter') calcular();
+    });
+
+    // ========== LÓGICA PRINCIPAL ==========
+    function calcular() {
+      const z = parseInt(document.getElementById('zInput').value);
+      if (!z || z < 1 || z > 118) {
+        alert('Digite um número atômico entre 1 e 118.');
+        return;
+      }
+
+      const el = elementos.find(e => e.z === z);
+      const config = gerarConfiguracao(z);
+      const { full, subshells, lastElectronQN, isAnomaly, anomalyMsg } = config;
+
+      document.getElementById('resZ').textContent = z;
+      document.getElementById('resZ2').textContent = z;
+      document.getElementById('resSym').textContent = el.s;
+      document.getElementById('resName').textContent = el.n;
+
+      const note = document.getElementById('anomalyNote');
+      if (isAnomaly) {
+        note.style.display = 'block';
+        note.innerHTML = `<strong>⚠ Anomalia experimental:</strong> ${anomalyMsg}`;
+      } else {
+        note.style.display = 'none';
+      }
+
+      document.getElementById('configFull').innerHTML = formatarConfig(full);
+
+      const { noble, valenceElectrons, valenceShell } = notacaoGasNobre(full, z);
+      document.getElementById('configNoble').innerHTML = formatarConfig(noble);
+      document.getElementById('valenceInfo').innerHTML = `
+        <span class="badge">Camada de valência: <strong>n = ${valenceShell}</strong></span>
+        <span class="badge">Elétrons de valência: <strong>${valenceElectrons}</strong></span>
+      `;
+
+      const qg = document.getElementById('quantumGrid');
+      if (lastElectronQN) {
+        qg.innerHTML = `
+          <div class="q-card"><div class="label">n</div><div class="value">${lastElectronQN.n}</div></div>
+          <div class="q-card"><div class="label">l</div><div class="value">${lastElectronQN.l}</div></div>
+          <div class="q-card"><div class="label">m<sub>l</sub></div><div class="value">${lastElectronQN.ml}</div></div>
+          <div class="q-card"><div class="label">m<sub>s</sub></div><div class="value">${lastElectronQN.ms}</div></div>
+        `;
+      } else {
+        qg.innerHTML = '<p style="color:var(--muted)">Não aplicável</p>';
+      }
+
+      renderOrbitais(subshells);
+
+      document.getElementById('resultado').classList.add('visible');
+      document.getElementById('resultado').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+
+    function gerarConfiguracao(z) {
+      let restante = z;
+      const preenchido = {};
+      let lastSub = null;
+
+      for (const orb of ordemPauling) {
+        if (restante <= 0) break;
+        const key = `${orb.n}${orb.sub}`;
+        const take = Math.min(orb.cap, restante);
+        preenchido[key] = take;
+        restante -= take;
+        if (take > 0) lastSub = { ...orb, key, electrons: take };
+      }
+
+      let isAnomaly = false;
+      let anomalyMsg = '';
+      if (anomalias[z]) {
+        isAnomaly = true;
+        const a = anomalias[z];
+        for (const [k, v] of Object.entries(a)) {
+          preenchido[k] = v;
+        }
+        const orderKeys = ordemPauling.map(o => `${o.n}${o.sub}`);
+        for (let i = orderKeys.length - 1; i >= 0; i--) {
+          const k = orderKeys[i];
+          if (preenchido[k] && preenchido[k] > 0) {
+            const orb = ordemPauling.find(o => `${o.n}${o.sub}` === k);
+            lastSub = { ...orb, key: k, electrons: preenchido[k] };
+            break;
+          }
+        }
+        anomalyMsg = `Configuração experimental difere da previsão de Aufbau (estabilidade de subnível semi/cheio ou efeitos relativísticos).`;
+      }
+
+      const subshells = [];
+      for (const orb of ordemPauling) {
+        const key = `${orb.n}${orb.sub}`;
+        const e = preenchido[key] || 0;
+        if (e > 0) {
+          subshells.push({ n: orb.n, sub: orb.sub, l: orb.l, electrons: e, cap: orb.cap });
+        }
+      }
+
+      const full = subshells.map(s => `${s.n}${s.sub}^${s.electrons}`);
+      const lastElectronQN = calcularQN(lastSub);
+
+      return { full, subshells, lastElectronQN, isAnomaly, anomalyMsg };
+    }
+
+    function calcularQN(lastSub) {
+      if (!lastSub || lastSub.electrons === 0) return null;
+      const { n, l, electrons } = lastSub;
+      const numOrbitals = 2 * l + 1;
+
+      let finalMl, finalMs;
+      if (electrons <= numOrbitals) {
+        finalMl = -l + (electrons - 1);
+        finalMs = '−½';
+      } else {
+        finalMl = -l + (electrons - numOrbitals - 1);
+        finalMs = '+½';
+      }
+
+      return { n, l, ml: finalMl, ms: finalMs };
+    }
+
+    function formatarConfig(arr) {
+      if (typeof arr === 'string') return arr;
+      return arr.map(term => {
+        return term.replace(/(\d+)([spdf])\^(\d+)/g, (_, n, sub, e) => {
+          return `<span class="sub">${n}${sub}<sup>${e}</sup></span>`;
+        }).replace(/\[([A-Za-z]+)\]/g, '<strong>[$1]</strong>');
+      }).join(' ');
+    }
+
+    function notacaoGasNobre(fullTerms, z) {
+      let nobleLabel = '';
+      let startIdx = 0;
+      for (let i = gasesNobres.length - 1; i >= 0; i--) {
+        if (z > gasesNobres[i].z) {
+          nobleLabel = gasesNobres[i].label;
+          const gasZ = gasesNobres[i].z;
+          let count = 0;
+          let temp = gasZ;
+          for (const orb of ordemPauling) {
+            if (temp <= 0) break;
+            const take = Math.min(orb.cap, temp);
+            temp -= take;
+            if (take > 0) count++;
+          }
+          startIdx = count;
+          break;
+        }
+      }
+
+      const after = fullTerms.slice(startIdx);
+      const nobleStr = nobleLabel ? [nobleLabel, ...after] : fullTerms;
+
+      let maxN = 0;
+      let valence = 0;
+      fullTerms.forEach(t => {
+        const m = t.match(/^(\d+)/);
+        if (m) {
+          const nn = parseInt(m[1]);
+          if (nn > maxN) { maxN = nn; valence = 0; }
+          if (nn === maxN) {
+            const em = t.match(/\^(\d+)/);
+            if (em) valence += parseInt(em[1]);
+          }
+        }
+      });
+
+      return { noble: nobleStr, valenceElectrons: valence, valenceShell: maxN };
+    }
+
+    function renderOrbitais(subshells) {
+      const container = document.getElementById('orbitalsVisual');
+      container.innerHTML = '';
+
+      subshells.forEach(s => {
+        const div = document.createElement('div');
+        div.className = 'subshell';
+        div.innerHTML = `<div class="subshell-label">${s.n}${s.sub}<sup>${s.electrons}</sup></div>`;
+        const boxes = document.createElement('div');
+        boxes.className = 'boxes';
+
+        const numOrbitals = 2 * s.l + 1;
+        const electrons = s.electrons;
+
+        const occupancy = Array(numOrbitals).fill(0);
+        let rem = electrons;
+        for (let i = 0; i < numOrbitals && rem > 0; i++) {
+          occupancy[i] = 1;
+          rem--;
+        }
+        for (let i = 0; i < numOrbitals && rem > 0; i++) {
+          occupancy[i] = 2;
+          rem--;
+        }
+
+        for (let i = 0; i < numOrbitals; i++) {
+          const box = document.createElement('div');
+          box.className = 'orbital-box' + (occupancy[i] > 0 ? ' filled' : '');
+          if (occupancy[i] >= 1) {
+            const down = document.createElement('div');
+            down.className = 'arrow down';
+            box.appendChild(down);
+          }
+          if (occupancy[i] === 2) {
+            const up = document.createElement('div');
+            up.className = 'arrow up';
+            box.appendChild(up);
+          }
+          boxes.appendChild(box);
+        }
+        div.appendChild(boxes);
+        container.appendChild(div);
+      });
+    }
+
+    window.addEventListener('DOMContentLoaded', () => {
+      calcular();
+    });
+  </script>
+</body>
+</html>
